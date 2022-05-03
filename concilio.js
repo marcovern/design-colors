@@ -1,154 +1,168 @@
 const canvasSketch = require("canvas-sketch");
 const random = require("canvas-sketch-util/random");
-const math = require("canvas-sketch-util/math");
-const Tweakpane = require("tweakpane");
 
-const load = require("load-asset");
-
-const params = {
-  element: 1,
-  cols: 10,
-  rows: 10,
-  scaleMin: 1,
-  scaleMax: 50,
-  freq: 0.001,
-  amp: 0.2,
-  frame: 0,
-  animate: true,
-  lineCap: "butt",
-};
 const settings = {
   dimensions: [1080, 1080],
-  animate: true,
 };
 
-let colorrrrr = [];
+let manager;
 
-const sketch = () => {
-  return ({ context, width, height, frame }) => {
-    context.fillStyle = "white";
+let text = "A";
+let fontSize = 1200;
+let fontFamily = "serif";
 
-    const image = new Image(60, 45); // Using optional size for image
-   // image.onload = drawImageActualSize; // Draw when image has loaded
+const typeCanvas = document.createElement("canvas");
+const typeContext = typeCanvas.getContext("2d");
 
-    // Load an image of intrinsic size 300x227 in CSS pixels
+const sketch = ({ context, width, height }) => {
+  const cell = 20;
+  const cols = Math.floor(width / cell);
+  const rows = Math.floor(height / cell);
+  const numCells = cols * rows;
+
+  typeCanvas.width = cols;
+  typeCanvas.height = rows;
+
+  return ({ context, width, height }) => {
+    typeContext.fillStyle = "black";
+    typeContext.fillRect(0, 0, cols, rows);
+
+    fontSize = cols * 1.2;
+
+    /*typeContext.fillStyle = 'white';
+		typeContext.font = `${fontSize}px ${fontFamily}`;
+		typeContext.textBaseline = 'top';
+
+		const metrics = typeContext.measureText(text);
+		const mx = metrics.actualBoundingBoxLeft * -1;
+		const my = metrics.actualBoundingBoxAscent * -1;
+		const mw = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight;
+		const mh = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+
+		const tx = (cols - mw) * 0.5 - mx;
+		const ty = (rows - mh) * 0.5 - my;
+
+		typeContext.save();
+		typeContext.translate(tx, ty);
+
+		typeContext.beginPath();
+		typeContext.rect(mx, my, mw, mh);
+		typeContext.stroke();
+
+		typeContext.fillText(text, 0, 0);
+		typeContext.restore();
+    */
+    //const image = new Image(width,height);
+    //image.src = 'concilio.png';
+    //typeContext.drawImage(image,0,0,width,height);
+
+    //const typeData = typeContext.getImageData(0, 0, cols, rows).data;
+
+    const image = new Image(width / 2, height / 2);
     image.src = "concilio.png";
+    typeContext.drawImage(image, 0, 0, width, height);
 
-    //const image = load({ url: "concilio.png", crossOrigin: "Anonymous" });
-    context.drawImage(image, 0, 0, width, height);
+    // getImageData is used to copy the pixels
+    var imageData = typeContext.getImageData(0, 0, width, height);
 
-   // context.fillRect(0, 0, width, height);
+    //context.fillStyle = 'black';
+    //context.fillRect(0, 0, width, height);
 
-    const cols = params.cols;
-    const rows = params.rows;
-    const numCells = cols * rows;
+    //context.textBaseline = 'middle';
+    //context.textAlign = 'center';
 
-    const gridw = width * 0.8;
-    const gridh = height * 0.8;
+    //context.drawImage(typeCanvas, 0, 0);
 
-    const cellw = gridw / cols;
-    const cellh = gridh / rows;
+    for (let i = 0; i < numCells; i++) {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
 
-    const margx = (width - gridw) * 0.5;
-    const margy = (height - gridh) * 0.5;
+      const x = col * cell;
+      const y = row * cell;
 
-    /*function getRandomColor() {
-      var letters = '0123456789ABCDEF';
-      var color = '#';
-      for (var i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
-      }
-      return color;
-    }*/
-    function getRandomColor(brightness) {
-      function randomChannel(brightness) {
-        var r = 255 - brightness;
-        var n = 0 | (Math.random() * r + brightness);
-        var s = n.toString(16);
-        return s.length == 1 ? "0" + s : s;
-      }
-      return (
-        "#" +
-        randomChannel(brightness) +
-        randomChannel(brightness) +
-        randomChannel(brightness)
-      );
-    }
+      const r = imageData.data[i * 4 + 0];
+      const g = imageData.data[i * 4 + 1];
+      const b = imageData.data[i * 4 + 2];
+      const a = imageData.data[i * 4 + 3];
 
-    function arrayOfColor() {
-      let array = [];
-      for (let index = 0; index < numCells; index++) {
-        let element = getRandomColor(150);
-        array.push(element);
-      }
-      return array;
-    }
+      // the RGBA info for pixel [x,y]
 
-    if (colorrrrr.length == 0 || colorrrrr.length != numCells) {
-      colorrrrr = arrayOfColor();
-    }
+      //const glyphr = getGlyph(r);
+      const glyphg = getGlyph(g);
+      const glyphb = getGlyph(b);
+      const glypha = getGlyph(a);
 
-    for (let index = 0; index < numCells; index++) {
-      let color = colorrrrr[index];
+      context.font = `${cell * 2}px ${fontFamily}`;
+      //if (Math.random() < 0.1) context.font = `${cell * 6}px ${fontFamily}`;
 
-      const column = index % cols;
-      const row = Math.floor(index / cols);
-
-      const x = column * cellw;
-      const y = row * cellh;
-      const w = cellw * 0.8;
-      const h = cellh * 0.8;
-
-      const f = params.animate ? frame : params.frame;
-
-      const n = random.noise2D(x + f * 20, y, params.freq);
-      const angle = n * Math.PI * params.amp;
-      const scale = math.mapRange(n, -1, 1, params.scaleMin, params.scaleMax);
+      context.fillStyle = `rgb(${r},${g},${b})`;
 
       context.save();
-
-      context.translate(margx, margy);
-
       context.translate(x, y);
-      context.translate(cellw * 0.5, cellh * 0.5);
+      context.translate(cell * 0.5, cell * 0.5);
 
-      context.rotate(angle);
+      //context.fillRect(0, 0, cell, cell);
 
-      context.lineWidth = scale;
-      context.lineCap = params.lineCap;
+      //context.fillText(glyphr, 0, 0);
+      //context.fillText(glyphg, 0, 0);
+      //context.fillText(glyphb, 0, 0);
+      // context.fillText(glypha, 0, 0);
 
-      context.beginPath();
-      context.strokeStyle = "black";
-
-      context.moveTo(w * -0.5, 0);
-      context.lineTo(w * 0.5, 0);
-
-      context.stroke();
       context.restore();
     }
   };
 };
 
-const createPane = () => {
-  const pane = new Tweakpane.Pane();
-  let folder;
-  folder = pane.addFolder({ title: "Grid " });
-  folder.addInput(params, "lineCap", {
-    options: { butt: "butt", round: "round", square: "square" },
-  });
-  folder.addInput(params, "cols", { min: 2, max: 50, step: 1 });
-  folder.addInput(params, "rows", { min: 2, max: 50, step: 1 });
-  folder.addInput(params, "scaleMin", { min: 1, max: 100 });
-  folder.addInput(params, "scaleMax", { min: 1, max: 100 });
-  //folder.addInput(params, 'element', { min: 1, max: 100, step: 1 })
+const getGlyph = (v) => {
+  if (v < 50) return "";
 
-  folder = pane.addFolder({ title: "Noise " });
-  folder.addInput(params, "freq", { min: -0.01, max: 0.01 });
+  if (v < 100) return ".";
+  if (v < 150) return "-";
+  if (v < 200) return "+";
 
-  folder.addInput(params, "amp", { min: 0.2, max: 1 });
-  folder.addInput(params, "animate");
-  folder.addInput(params, "frame", { min: 0, max: 999 });
+  const glyphs = "_= /".split("");
+
+  return random.pick(glyphs);
 };
 
-createPane();
-canvasSketch(sketch, settings);
+const onKeyUp = (e) => {
+  text = e.key.toUpperCase();
+  manager.render();
+};
+
+//document.addEventListener('keyup', onKeyUp);
+
+const start = async () => {
+  manager = await canvasSketch(sketch, settings);
+};
+
+start();
+
+/*
+const url = 'https://picsum.photos/200';
+
+const loadMeSomeImage = (url) => {
+	return new Promise((resolve, reject) => {
+		const img = new Image();
+		img.onload = () => resolve(img);
+		img.onerror = () => reject();
+		img.src = url;
+	});
+};
+
+const start = async () => {
+	const img = await loadMeSomeImage(url);
+	console.log('image width', img.width);
+	console.log('this line');
+};
+
+// const start = () => {
+// 	loadMeSomeImage(url).then(img => {
+// 		console.log('image width', img.width);
+// 	});
+// 	console.log('this line');
+// };
+
+
+start();
+*/

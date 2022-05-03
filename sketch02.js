@@ -26,18 +26,10 @@ let colorrrrr = [];
 
 const sketch = () => {
   return ({ context, width, height, frame }) => {
-    context.fillStyle = "white";
+    context.fillStyle = "black";
 
-    const image = new Image(60, 45); // Using optional size for image
-   // image.onload = drawImageActualSize; // Draw when image has loaded
 
-    // Load an image of intrinsic size 300x227 in CSS pixels
-    image.src = "concilio.png";
-
-    //const image = load({ url: "concilio.png", crossOrigin: "Anonymous" });
-    context.drawImage(image, 0, 0, width, height);
-
-   // context.fillRect(0, 0, width, height);
+    context.fillRect(0, 0, width, height);
 
     const cols = params.cols;
     const rows = params.rows;
@@ -118,7 +110,7 @@ const sketch = () => {
       context.lineCap = params.lineCap;
 
       context.beginPath();
-      context.strokeStyle = "black";
+      context.strokeStyle = "white";
 
       context.moveTo(w * -0.5, 0);
       context.lineTo(w * 0.5, 0);
